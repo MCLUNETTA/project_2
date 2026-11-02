@@ -72,3 +72,30 @@ def test_new_product_class_method():
     assert product.name == "Sony"
     assert product.price == 50000.0
     assert product.quantity == 3
+
+def test_product_str(sample_products):
+    """Тест строкового представления продукта (__str__)."""
+    product1, _ = sample_products
+    assert str(product1) == "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
+
+
+def test_category_str(sample_category):
+    """Тест строкового представления категории (__str__)."""
+    # В фикстуре sample_products у нас 5 шт. одного товара и 8 шт. другого. Итого 13 шт.
+    assert str(sample_category) == "Смартфоны, количество продуктов: 13 шт."
+
+
+def test_product_add(sample_products):
+    """Тест магического метода сложения продуктов (__add__)."""
+    product1, product2 = sample_products
+    # product1: 180000.0 * 5 = 900 000
+    # product2: 210000.0 * 8 = 1 680 000
+    # Итого: 2 580 000.0
+    assert product1 + product2 == 2580000.0
+
+
+def test_product_add_type_error(sample_products):
+    """Тест, что сложение продукта с объектом другого типа вызывает ошибку TypeError."""
+    product1, _ = sample_products
+    with pytest.raises(TypeError):
+        _ = product1 + "не продукт"  # Попытка сложить строку с продуктом

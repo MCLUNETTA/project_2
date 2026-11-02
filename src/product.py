@@ -10,6 +10,16 @@ class Product:
         self.__price = price
         self.quantity = quantity
 
+    def __str__(self) -> str:
+        """Возвращает строковое представление продукта."""
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other) -> float:
+        """Складывает два продукта, возвращая сумму произведений цены на количество."""
+        if not isinstance(other, Product):
+            raise TypeError("Складывать можно только объекты класса Product")
+        return (self.price * self.quantity) + (other.price * other.quantity)
+
     @classmethod
     def new_product(cls, product_data: dict) -> "Product":
         """Создает и возвращает объект класса Product на основе словаря."""
@@ -50,6 +60,12 @@ class Category:
         Category.category_count += 1
         Category.product_count += len(products) if products else 0
 
+    def __str__(self) -> str:
+        """Возвращает строковое представление категории."""
+        # Подсчитываем общее количество товаров на складе для всех продуктов в этой категории
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
     def add_product(self, product: Product) -> None:
         """Добавляет продукт в приватный список товаров и увеличивает общий счетчик продуктов."""
         self.__products.append(product)
@@ -58,7 +74,5 @@ class Category:
     @property
     def products(self) -> str:
         """Геттер, возвращающий список продуктов в виде отформатированных строк."""
-        product_str = ""
-        for product in self.__products:
-            product_str += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
-        return product_str
+        # Оптимизировали геттер: теперь он превращает объект продукта в строку через str(product)
+        return "".join([f"{str(product)}\n" for product in self.__products])
