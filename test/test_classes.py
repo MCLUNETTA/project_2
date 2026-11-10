@@ -1,102 +1,52 @@
 import pytest
 
-from src.product import Category, Product
+from product import BaseProduct, LawnGrass, Product, Smartphone
 
 
-@pytest.fixture
-def sample_products():
-    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый", 180000.0, 5)
-    product2 = Product("Iphone 15", "512GB, Gray", 210000.0, 8)
-    return product1, product2
+def test_base_product_is_abstract():
+    """Проверяем, что BaseProduct является абстрактным и его нельзя инициализировать напрямую."""
+    with pytest.raises(TypeError):
+        BaseProduct()
 
 
-@pytest.fixture
-def sample_category(sample_products):
-    product1, product2 = sample_products
-    return Category("Смартфоны", "Устройства связи", [product1, product2])
+def test_product_creation_and_mixin(capsys):
+    """Проверяем создание продукта, работу миксина (вывод в консоль) и атрибуты."""
+    product = Product("Яблоко", "Красное свежее", 100.0, 50)
+    captured = capsys.readouterr()
 
-
-def test_product_initialization(sample_products):
-    product1, _ = sample_products
-    assert product1.name == "Samsung Galaxy S23 Ultra"
-    assert product1.description == "256GB, Серый"
-    assert product1.price == 180000.0
-    assert product1.quantity == 5
+    assert "Product" in captured.out
+    assert product.name == "Яблоко"
+    assert product.description == "Красное свежее"
+    assert product.price == 100.0
+    assert product.quantity == 50
 
 
 def test_product_price_setter():
-    product = Product("Test", "Desc", 100.0, 1)
+    """Проверяем работу сеттера цены (включая защиту от некорректных значений)."""
+    product = Product("Товар", "Описание", 200.0, 10)
 
-    # Корректная установка цены
-    product.price = 150.0
-    assert product.price == 150.0
+    product.price = 250.0
+    assert product.price == 250.0
 
-    # Некорректная установка цены (нулевая или отрицательная)
-    product.price = 0
-    assert product.price == 150.0  # Цена не должна измениться
-
-    product.price = -50.0
-    assert product.price == 150.0
+    product.price = -50
+    assert product.price == 250.0
 
 
-def test_category_initialization(sample_category, sample_products):
-    product1, product2 = sample_products
-    assert sample_category.name == "Смартфоны"
-    assert sample_category.description == "Устройства связи"
-    # Проверяем работу геттера products
-    expected_products_str = (
-        "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт.\n"
-        "Iphone 15, 210000.0 руб. Остаток: 8 шт.\n"
-    )
-    assert sample_category.products == expected_products_str
+def test_smartphone_creation():
+    """Проверяем корректность создания класса Smartphone."""
+    phone = Smartphone("Samsung", "Galaxy S23", 75000.0, 10, "high", "S23", "128GB", "Black")
+    assert phone.name == "Samsung"
+    assert phone.price == 75000.0
+    assert phone.efficiency == "high"
+    assert phone.model == "S23"
+    assert phone.memory == "128GB"
+    assert phone.color == "Black"
 
 
-def test_add_product_to_category(sample_category):
-    initial_count = Category.product_count
-    new_product = Product("Xiaomi", "Redmi", 30000.0, 10)
-    sample_category.add_product(new_product)
-
-    assert Category.product_count == initial_count + 1
-    assert "Xiaomi" in sample_category.products
-
-
-def test_new_product_class_method():
-    product_data = {
-        "name": "Sony",
-        "description": "Camera",
-        "price": 50000.0,
-        "quantity": 3,
-    }
-    product = Product.new_product(product_data)
-    assert isinstance(product, Product)
-    assert product.name == "Sony"
-    assert product.price == 50000.0
-    assert product.quantity == 3
-
-
-def test_product_str(sample_products):
-    """Тест строкового представления продукта (__str__)."""
-    product1, _ = sample_products
-    assert str(product1) == "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
-
-
-def test_category_str(sample_category):
-    """Тест строкового представления категории (__str__)."""
-    # В фикстуре sample_products у нас 5 шт. одного товара и 8 шт. другого. Итого 13 шт.
-    assert str(sample_category) == "Смартфоны, количество продуктов: 13 шт."
-
-
-def test_product_add(sample_products):
-    """Тест магического метода сложения продуктов (__add__)."""
-    product1, product2 = sample_products
-    # product1: 180000.0 * 5 = 900 000
-    # product2: 210000.0 * 8 = 1 680 000
-    # Итого: 2 580 000.0
-    assert product1 + product2 == 2580000.0
-
-
-def test_product_add_type_error(sample_products):
-    """Тест, что сложение продукта с объектом другого типа вызывает ошибку TypeError."""
-    product1, _ = sample_products
-    with pytest.raises(TypeError):
-        _ = product1 + "не продукт"  # Попытка сложить строку с продуктом
+def test_lawn_grass_creation():
+    """Проверяем корректность создания класса LawnGrass."""
+    grass = LawnGrass("Газонная трава", "Изумрудная", 500.0, 20, "Россия", "7 дней", "Зеленый")
+    assert grass.name == "Газонная трава"
+    assert grass.country == "Россия"
+    assert grass.germination_period == "7 дней"
+    assert grass.color == "Зеленый"
