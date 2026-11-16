@@ -1,6 +1,6 @@
 import pytest
 
-from product import BaseProduct, LawnGrass, Product, Smartphone
+from product import BaseProduct, Category, LawnGrass, Product, Smartphone
 
 
 def test_base_product_is_abstract():
@@ -21,6 +21,12 @@ def test_product_creation_and_mixin(capsys):
     assert product.quantity == 50
 
 
+def test_product_zero_quantity():
+    """Проверяем выброс ValueError при создании товара с нулевым количеством."""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product("Бракованный товар", "Неверное количество", 1000.0, 0)
+
+
 def test_product_price_setter():
     """Проверяем работу сеттера цены (включая защиту от некорректных значений)."""
     product = Product("Товар", "Описание", 200.0, 10)
@@ -30,6 +36,15 @@ def test_product_price_setter():
 
     product.price = -50
     assert product.price == 250.0
+
+
+def test_product_new_product():
+    """Проверяем класс-метод создания товара из словаря."""
+    data = {"name": "Груша", "description": "Сладкая", "price": 150.0, "quantity": 20}
+    product = Product.new_product(data)
+    assert product.name == "Груша"
+    assert product.price == 150.0
+    assert product.quantity == 20
 
 
 def test_smartphone_creation():
@@ -50,3 +65,43 @@ def test_lawn_grass_creation():
     assert grass.country == "Россия"
     assert grass.germination_period == "7 дней"
     assert grass.color == "Зеленый"
+
+
+def test_category_creation_and_add_product():
+    """Проверяем создание категории, добавление товаров и вывод списка."""
+    Category.category_count = 0
+    Category.product_count = 0
+
+    product1 = Product("Товар 1", "Описание 1", 100.0, 5)
+    product2 = Product("Товар 2", "Описание 2", 200.0, 10)
+    category = Category("Категория", "Описание категории", [product1])
+
+    assert category.name == "Категория"
+    assert Category.category_count == 1
+    assert Category.product_count == 1
+
+    category.add_product(product2)
+    assert Category.product_count == 2
+    assert "Товар 1, 100.0 руб. Остаток: 5 шт." in category.products
+    assert "Товар 2, 200.0 руб. Остаток: 10 шт." in category.products
+
+
+def test_category_add_invalid_product():
+    """Проверяем защиту от добавления неверного типа объекта в категорию."""
+    category = Category("Категория", "Описание")
+    with pytest.raises(TypeError):
+        category.add_product("Не товар")
+
+
+def test_category_middle_price():
+    """Проверяем подсчет среднего ценника товаров в категории."""
+    product1 = Product("Товар 1", "Описание 1", 100.0, 5)
+    product2 = Product("Товар 2", "Описание 2", 200.0, 10)
+    category = Category("Тестовая категория", "Описание", [product1, product2])
+    assert category.middle_price() == 150.0
+
+
+def test_category_middle_price_empty():
+    """Проверяем возврат 0 при подсчете среднего ценника в пустой категории."""
+    empty_category = Category("Пустая категория", "Нет товаров", [])
+    assert empty_category.middle_price() == 0

@@ -13,13 +13,14 @@ class PrintCreationMixin:
         super().__init__()
 
     def __repr__(self):
-        # Формируем строковое представление со всеми атрибутами объекта
         attributes = ", ".join([f"{v!r}" for v in self.__dict__.values()])
         return f"{self.__class__.__name__}({attributes})"
 
 
 class Product(PrintCreationMixin, BaseProduct):
     def __init__(self, name: str, description: str, price: float, quantity: int):
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
         self.name = name
         self.description = description
         self.__price = price
@@ -57,3 +58,33 @@ class LawnGrass(Product):
         self.country = country
         self.germination_period = germination_period
         self.color = color
+
+
+class Category:
+    category_count = 0
+    product_count = 0
+
+    def __init__(self, name: str, description: str, products: list = None):
+        self.name = name
+        self.description = description
+        self.__products = products if products is not None else []
+        Category.category_count += 1
+        Category.product_count += len(self.__products)
+
+    def add_product(self, product: Product):
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
+        self.__products.append(product)
+        Category.product_count += 1
+
+    @property
+    def products(self):
+        return "\n".join(
+            f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт." for p in self.__products
+        )
+
+    def middle_price(self) -> float:
+        try:
+            return sum(product.price for product in self.__products) / len(self.__products)
+        except ZeroDivisionError:
+            return 0
